@@ -3,6 +3,7 @@ import { renderExtensionTemplateAsync } from '/scripts/extensions.js';
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
+let phoneInitialized = false;
 
 function updateTime() {
     const now = new Date();
@@ -54,19 +55,29 @@ function openApp(appName) {
     const appContent = document.getElementById('phone-app-content');
     const appTitle = document.getElementById('app-title');
     const appBody = document.getElementById('app-body');
-    
+
     if (!home || !appContent || !appTitle || !appBody) return;
-    
+
     home.style.display = 'none';
     appContent.classList.add('active', 'slide-in');
     currentApp = appName;
-    
+
     const appConfig = getAppConfig(appName);
     appTitle.textContent = appConfig.title;
     appBody.innerHTML = appConfig.content;
-    
+
     if (appConfig.onInit) {
         appConfig.onInit();
+    }
+}
+
+function calculate(a, b, op) {
+    switch (op) {
+        case 'add': return a + b;
+        case 'subtract': return a - b;
+        case 'multiply': return a * b;
+        case 'divide': return b !== 0 ? a / b : 'Error';
+        default: return b;
     }
 }
 
@@ -85,7 +96,7 @@ function getAppConfig(appName) {
                             </div>
                         </div>
                         <div class="chat-item">
-                            <div class="chat-avatar">👥</div>
+                            <div class="chat-avatar group">👥</div>
                             <div class="chat-info">
                                 <div class="chat-name">工作群</div>
                                 <div class="chat-preview">明天开会，请大家准时参加</div>
@@ -99,7 +110,7 @@ function getAppConfig(appName) {
                             </div>
                         </div>
                         <div class="chat-item">
-                            <div class="chat-avatar">🤖</div>
+                            <div class="chat-avatar official">🤖</div>
                             <div class="chat-info">
                                 <div class="chat-name">订阅号消息</div>
                                 <div class="chat-preview">今日热点新闻...</div>
@@ -119,29 +130,29 @@ function getAppConfig(appName) {
                 const firstDay = new Date(year, month, 1).getDay();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const daysInPrevMonth = new Date(year, month, 0).getDate();
-                
+
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
                 let html = `<div style="text-align:center;font-size:18px;font-weight:600;margin-bottom:16px;">${year}年${month + 1}月</div>`;
                 html += '<div class="calendar-grid">';
-                
+
                 weekdays.forEach(day => {
                     html += `<div class="calendar-header-row">${day}</div>`;
                 });
-                
+
                 for (let i = firstDay - 1; i >= 0; i--) {
                     html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
                 }
-                
+
                 for (let day = 1; day <= daysInMonth; day++) {
                     const isToday = day === today ? ' today' : '';
                     html += `<div class="calendar-day${isToday}">${day}</div>`;
                 }
-                
+
                 const remaining = 42 - (firstDay + daysInMonth);
                 for (let day = 1; day <= remaining && day <= 14; day++) {
                     html += `<div class="calendar-day other-month">${day}</div>`;
                 }
-                
+
                 html += '</div>';
                 return html;
             })()
@@ -359,15 +370,15 @@ function getAppConfig(appName) {
                 let calcPrevious = null;
                 let calcOperation = null;
                 let calcReset = false;
-                
+
                 const resultEl = document.getElementById('calc-result');
                 const buttons = document.querySelectorAll('.calc-btn');
-                
+
                 buttons.forEach(btn => {
                     btn.addEventListener('click', () => {
                         const value = btn.dataset.value;
                         const action = btn.dataset.action;
-                        
+
                         if (value !== undefined) {
                             if (calcReset) {
                                 calcDisplay = '';
@@ -414,35 +425,28 @@ function getAppConfig(appName) {
                                     break;
                             }
                         }
-                        
+
                         if (resultEl) {
-                            const num = parseFloat(calcDisplay);
-                            resultEl.textContent = isNaN(num) ? '0' : (calcDisplay.length > 12 ? num.toExponential(6) : calcDisplay);
+                            resultEl.textContent = calcDisplay;
                         }
                     });
                 });
-                
-                function calculate(a, b, op) {
-                    switch (op) {
-                        case 'add': return a + b;
-                        case 'subtract': return a - b;
-                        case 'multiply': return a * b;
-                        case 'divide': return b !== 0 ? a / b : 'Error';
-                        default: return b;
-                    }
-                }
             }
         },
         browser: {
             title: '浏览器',
             content: `
                 <div class="browser-content">
-                    <div class="browser-url">
-                        <input type="text" placeholder="搜索或输入网址" readonly>
+                    <div class="browser-nav">
+                        <div class="browser-url-bar">
+                            <span class="browser-url-icon">🔍</span>
+                            <input type="text" class="browser-url-input" placeholder="搜索或输入网址" value="www.google.com">
+                        </div>
                     </div>
                     <div class="browser-body">
-                        <div style="font-size:48px;margin-bottom:16px;">🌐</div>
-                        <div>浏览器</div>
+                        <div class="browser-home-icon">🌐</div>
+                        <div class="browser-title">欢迎使用浏览器</div>
+                        <div class="browser-subtitle">输入网址开始浏览</div>
                     </div>
                 </div>
             `
@@ -451,11 +455,17 @@ function getAppConfig(appName) {
             title: '相机',
             content: `
                 <div class="camera-content">
-                    <div class="camera-viewfinder">📷</div>
+                    <div class="camera-viewfinder">
+                        <div class="camera-overlay">
+                            <span class="camera-mode">拍照</span>
+                            <span class="camera-flash">⚡</span>
+                        </div>
+                        📷
+                    </div>
                     <div class="camera-controls">
-                        <div style="width:40px;height:40px;background:#333;border-radius:8px;"></div>
-                        <button class="camera-shutter"></button>
-                        <div style="width:40px;height:40px;background:#333;border-radius:50%;"></div>
+                        <div class="camera-gallery">�</div>
+                        <div class="camera-shutter"></div>
+                        <div class="camera-flash">⚡</div>
                     </div>
                 </div>
             `
@@ -464,35 +474,19 @@ function getAppConfig(appName) {
             title: '地图',
             content: `
                 <div class="maps-content">
-                    <div class="maps-placeholder">🗺️</div>
-                    <div class="maps-search">
-                        <input type="text" placeholder="搜索地点">
-                    </div>
-                </div>
-            `
-        },
-        phone: {
-            title: '电话',
-            content: `
-                <div class="phone-content">
-                    <div style="text-align:center;padding:32px;">
-                        <div style="font-size:48px;margin-bottom:16px;">📞</div>
-                        <div style="font-size:24px;font-weight:300;letter-spacing:2px;margin-bottom:24px;">138 0000 0000</div>
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:240px;margin:0 auto;">
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">1</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">2</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">3</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">4</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">5</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">6</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">7</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">8</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">9</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">*</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">0</div>
-                            <div style="width:64px;height:64px;background:#e5e5ea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">#</div>
+                    <div class="maps-search-bar">
+                        <div class="maps-search">
+                            <span class="maps-search-icon">🔍</span>
+                            <input type="text" class="maps-search-input" placeholder="搜索地点" value="北京市">
                         </div>
-                        <button style="width:64px;height:64px;background:#34c759;border:none;border-radius:50%;color:white;font-size:28px;margin-top:24px;cursor:pointer;">📞</button>
+                    </div>
+                    <div class="maps-map">
+                        <div class="maps-compass">🧭</div>
+                        <div class="maps-location">
+                            <span class="maps-location-icon">📍</span>
+                            <span class="maps-location-text">北京市朝阳区</span>
+                        </div>
+                        �️
                     </div>
                 </div>
             `
@@ -528,17 +522,24 @@ function getAppConfig(appName) {
             `
         }
     };
-    
+
     return configs[appName] || { title: appName, content: '<div>应用未找到</div>' };
 }
 
 function createPhoneButton() {
+    const container = $('#phone_wand_container');
+    if (container.length === 0) {
+        console.warn('[Phone Plugin] #phone_wand_container not found, retrying...');
+        setTimeout(createPhoneButton, 500);
+        return;
+    }
+
     const buttonHtml = `
         <div id="phone_toggle" class="list-group-item flex-container flexGap5">
             <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
             小手机
         </div>`;
-    $('#phone_wand_container').append(buttonHtml);
+    container.append(buttonHtml);
     $('#phone_toggle').on('click', () => {
         if (phoneOverlay && phoneOverlay.hasClass('active')) {
             closePhone();
@@ -548,29 +549,23 @@ function createPhoneButton() {
     });
 }
 
-export async function init() {
-    const html = await renderExtensionTemplateAsync('third-party/qwq', 'phone');
-    phoneOverlay = $(html);
-    $('body').append(phoneOverlay);
-    
-    createPhoneButton();
-    
+function setupEventListeners() {
     phoneOverlay.on('click', (e) => {
         if (e.target === phoneOverlay[0]) {
             closePhone();
         }
     });
-    
+
     const homeBtn = document.getElementById('home-button');
     if (homeBtn) {
         homeBtn.addEventListener('click', goHome);
     }
-    
+
     const backBtn = document.getElementById('back-button');
     if (backBtn) {
         backBtn.addEventListener('click', goHome);
     }
-    
+
     document.addEventListener('click', (e) => {
         const appItem = e.target.closest('.app-item, .dock-item');
         if (appItem) {
@@ -580,10 +575,26 @@ export async function init() {
             }
         }
     });
-    
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && phoneOverlay && phoneOverlay.classList.contains('active')) {
+        if (e.key === 'Escape' && phoneOverlay && phoneOverlay.hasClass('active')) {
             closePhone();
         }
     });
+}
+
+export async function init() {
+    try {
+        const html = await renderExtensionTemplateAsync('third-party/qwq', 'phone');
+        phoneOverlay = $(html);
+        $('body').append(phoneOverlay);
+
+        createPhoneButton();
+        setupEventListeners();
+
+        phoneInitialized = true;
+        console.log('[Phone Plugin] Initialized successfully');
+    } catch (error) {
+        console.error('[Phone Plugin] Initialization failed:', error);
+    }
 }
