@@ -539,6 +539,7 @@ function createPhoneButton() {
             const menuItem = document.createElement('div');
             menuItem.className = 'list-group-item flex-container flexGap5';
             menuItem.id = 'qwq-toggle';
+            menuItem.style.display = 'block';
             menuItem.innerHTML = `
                 <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
                 <span>qwq</span>
@@ -554,6 +555,8 @@ function createPhoneButton() {
 
             extensionsMenu.appendChild(menuItem);
             console.log('[qwq Plugin] Menu entry registered');
+            console.log('[qwq Plugin] Menu item display:', menuItem.style.display);
+            console.log('[qwq Plugin] Menu children count:', extensionsMenu.children.length);
         } catch (error) {
             console.error('[qwq Plugin] Failed to register menu:', error);
         }
