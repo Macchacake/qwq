@@ -1,9 +1,11 @@
+import { eventSource, event_types } from '/scripts/script.js';
 import { renderExtensionTemplateAsync } from '/scripts/extensions.js';
 
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
 let phoneInitialized = false;
+let menuEntryCreated = false;
 
 function updateTime() {
     const now = new Date();
@@ -463,7 +465,7 @@ function getAppConfig(appName) {
                         📷
                     </div>
                     <div class="camera-controls">
-                        <div class="camera-gallery">�</div>
+                        <div class="camera-gallery">🖼</div>
                         <div class="camera-shutter"></div>
                         <div class="camera-flash">⚡</div>
                     </div>
@@ -486,7 +488,7 @@ function getAppConfig(appName) {
                             <span class="maps-location-icon">📍</span>
                             <span class="maps-location-text">北京市朝阳区</span>
                         </div>
-                        �️
+                        🗺️
                     </div>
                 </div>
             `
@@ -527,9 +529,9 @@ function getAppConfig(appName) {
 }
 
 function createPhoneButton() {
-    const container = $('#phone_wand_container');
-    if (container.length === 0) {
-        console.warn('[Phone Plugin] #phone_wand_container not found, retrying...');
+    const extensionsMenu = document.querySelector('#extensionsMenu');
+    if (!extensionsMenu) {
+        console.warn('[Phone Plugin] #extensionsMenu not found, retrying...');
         setTimeout(createPhoneButton, 500);
         return;
     }
@@ -537,16 +539,21 @@ function createPhoneButton() {
     const buttonHtml = `
         <div id="phone_toggle" class="list-group-item flex-container flexGap5">
             <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
-            小手机
+            <span>小手机</span>
         </div>`;
-    container.append(buttonHtml);
-    $('#phone_toggle').on('click', () => {
-        if (phoneOverlay && phoneOverlay.hasClass('active')) {
-            closePhone();
-        } else {
-            openPhone();
-        }
-    });
+    extensionsMenu.insertAdjacentHTML('beforeend', buttonHtml);
+
+    const phoneToggle = document.getElementById('phone_toggle');
+    if (phoneToggle) {
+        phoneToggle.addEventListener('click', () => {
+            if (phoneOverlay && phoneOverlay.hasClass('active')) {
+                closePhone();
+            } else {
+                openPhone();
+            }
+        });
+        menuEntryCreated = true;
+    }
 }
 
 function setupEventListeners() {
@@ -589,8 +596,21 @@ export async function init() {
         phoneOverlay = $(html);
         $('body').append(phoneOverlay);
 
-        createPhoneButton();
         setupEventListeners();
+
+        eventSource.on(event_types.APP_READY, () => {
+            if (!menuEntryCreated) {
+                createPhoneButton();
+            }
+        });
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(() => {
+                if (!menuEntryCreated) {
+                    createPhoneButton();
+                }
+            }, 1000);
+        }
 
         phoneInitialized = true;
         console.log('[Phone Plugin] Initialized successfully');
