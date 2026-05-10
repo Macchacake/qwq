@@ -1,3 +1,6 @@
+import { renderExtensionTemplateAsync } from '/scripts/extensions.js';
+import { eventSource, event_types } from '/scripts/script.js';
+
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
@@ -15,7 +18,7 @@ function updateTime() {
 
 function openPhone() {
     if (phoneOverlay) {
-        phoneOverlay.classList.add('active');
+        phoneOverlay.addClass('active');
         updateTime();
         if (!clockInterval) {
             clockInterval = setInterval(updateTime, 1000);
@@ -25,7 +28,7 @@ function openPhone() {
 
 function closePhone() {
     if (phoneOverlay) {
-        phoneOverlay.classList.remove('active');
+        phoneOverlay.removeClass('active');
         goHome();
         if (clockInterval) {
             clearInterval(clockInterval);
@@ -461,7 +464,7 @@ function getAppConfig(appName) {
                         📷
                     </div>
                     <div class="camera-controls">
-                        <div class="camera-gallery">🖼</div>
+                        <div class="camera-gallery">�</div>
                         <div class="camera-shutter"></div>
                         <div class="camera-flash">⚡</div>
                     </div>
@@ -484,7 +487,7 @@ function getAppConfig(appName) {
                             <span class="maps-location-icon">📍</span>
                             <span class="maps-location-text">北京市朝阳区</span>
                         </div>
-                        🗺️
+                        �️
                     </div>
                 </div>
             `
@@ -524,117 +527,42 @@ function getAppConfig(appName) {
     return configs[appName] || { title: appName, content: '<div>应用未找到</div>' };
 }
 
-function createPhoneUI() {
-    const html = `
-        <div id="phone-overlay" class="phone-overlay">
-            <div class="phone-frame">
-                <div class="phone-notch"></div>
-                <div class="phone-screen">
-                    <div class="phone-status-bar">
-                        <span id="phone-status-time">12:00</span>
-                        <div class="phone-status-icons">
-                            <span>📶</span>
-                            <span>📡</span>
-                            <span>🔋</span>
-                        </div>
-                    </div>
-                    <div id="phone-home" class="phone-home">
-                        <div class="phone-wallpaper"></div>
-                        <div class="phone-apps-grid">
-                            <div class="app-item" data-app="wechat">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#07c160,#05a050);">💬</div>
-                                <div class="app-label">微信</div>
-                            </div>
-                            <div class="app-item" data-app="calendar">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#ff3b30,#ff6b60);">📅</div>
-                                <div class="app-label">日历</div>
-                            </div>
-                            <div class="app-item" data-app="photos">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#5856d6,#7b79e0);">🖼</div>
-                                <div class="app-label">相册</div>
-                            </div>
-                            <div class="app-item" data-app="weather">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#007aff,#4facfe);">☀️</div>
-                                <div class="app-label">天气</div>
-                            </div>
-                            <div class="app-item" data-app="clock">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#1c1c1e,#3a3a3c);">🕐</div>
-                                <div class="app-label">时钟</div>
-                            </div>
-                            <div class="app-item" data-app="maps">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#34c759,#5ee07a);">🗺</div>
-                                <div class="app-label">地图</div>
-                            </div>
-                            <div class="app-item" data-app="notes">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#ffcc00,#ffe066);">📝</div>
-                                <div class="app-label">备忘录</div>
-                            </div>
-                            <div class="app-item" data-app="music">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#ff2d55,#ff6b8a);">🎵</div>
-                                <div class="app-label">音乐</div>
-                            </div>
-                            <div class="app-item" data-app="calculator">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#8e8e93,#aeaeb2);">🔢</div>
-                                <div class="app-label">计算器</div>
-                            </div>
-                            <div class="app-item" data-app="settings">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#8e8e93,#b0b0b5);">⚙️</div>
-                                <div class="app-label">设置</div>
-                            </div>
-                            <div class="app-item" data-app="browser">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#007aff,#5ac8fa);">🌐</div>
-                                <div class="app-label">浏览器</div>
-                            </div>
-                            <div class="app-item" data-app="camera">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#5856d6,#8e8e93);">📷</div>
-                                <div class="app-label">相机</div>
-                            </div>
-                        </div>
-                        <div class="phone-dock">
-                            <div class="dock-item" data-app="phone">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#34c759,#5ee07a);">📞</div>
-                            </div>
-                            <div class="dock-item" data-app="messages">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#34c759,#5ee07a);">💬</div>
-                            </div>
-                            <div class="dock-item" data-app="browser">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#007aff,#5ac8fa);">🧭</div>
-                            </div>
-                            <div class="dock-item" data-app="music">
-                                <div class="app-icon" style="background:linear-gradient(135deg,#ff2d55,#ff6b8a);">🎵</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="phone-app-content" class="phone-app-content">
-                        <div class="app-header">
-                            <button id="back-button" class="app-back">‹</button>
-                            <span id="app-title" class="app-title-text">应用</span>
-                            <div style="width:40px;"></div>
-                        </div>
-                        <div id="app-body" class="app-body"></div>
-                    </div>
-                    <div class="phone-home-indicator">
-                        <div id="home-button" class="home-bar"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+function createPhoneButton() {
+    eventSource.on(event_types.APP_READY, () => {
+        try {
+            const extensionsMenu = document.querySelector('#extensionsMenu');
+            if (!extensionsMenu) {
+                console.warn('[qwq Plugin] #extensionsMenu not found');
+                return;
+            }
 
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    phoneOverlay = div.firstElementChild;
-    document.body.appendChild(phoneOverlay);
+            const menuItem = document.createElement('div');
+            menuItem.className = 'list-group-item flex-container flexGap5';
+            menuItem.id = 'qwq-toggle';
+            menuItem.innerHTML = `
+                <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
+                <span>qwq</span>
+            `;
 
-    setupEventListeners();
-    updateTime();
+            menuItem.addEventListener('click', () => {
+                if (phoneOverlay && phoneOverlay.hasClass('active')) {
+                    closePhone();
+                } else {
+                    openPhone();
+                }
+            });
+
+            extensionsMenu.appendChild(menuItem);
+            console.log('[qwq Plugin] Menu entry registered');
+        } catch (error) {
+            console.error('[qwq Plugin] Failed to register menu:', error);
+        }
+    });
 }
 
 function setupEventListeners() {
-    if (!phoneOverlay) return;
-
-    phoneOverlay.addEventListener('click', (e) => {
-        if (e.target === phoneOverlay) {
+    phoneOverlay.on('click', (e) => {
+        if (e.target === phoneOverlay[0]) {
             closePhone();
         }
     });
@@ -649,7 +577,7 @@ function setupEventListeners() {
         backBtn.addEventListener('click', goHome);
     }
 
-    phoneOverlay.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
         const appItem = e.target.closest('.app-item, .dock-item');
         if (appItem) {
             const appName = appItem.dataset.app;
@@ -660,76 +588,24 @@ function setupEventListeners() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && phoneOverlay && phoneOverlay.classList.contains('active')) {
+        if (e.key === 'Escape' && phoneOverlay && phoneOverlay.hasClass('active')) {
             closePhone();
         }
     });
-}
-
-function registerMenuEntry() {
-    const extensionsMenu = document.querySelector('#extensionsMenu');
-    if (!extensionsMenu) {
-        console.warn('[小手机] 扩展菜单未找到，稍后重试...');
-        setTimeout(registerMenuEntry, 1000);
-        return;
-    }
-
-    if (document.getElementById('phone-toggle')) {
-        console.log('[小手机] 菜单项已存在，跳过注册');
-        return;
-    }
-
-    const menuItem = document.createElement('div');
-    menuItem.className = 'list-group-item flex-container flexGap5';
-    menuItem.id = 'phone-toggle';
-    menuItem.innerHTML = `
-        <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
-        <span>小手机</span>
-    `;
-
-    menuItem.addEventListener('click', () => {
-        console.log('[小手机] 打开/关闭手机');
-        if (phoneOverlay && phoneOverlay.classList.contains('active')) {
-            closePhone();
-        } else {
-            openPhone();
-        }
-    });
-
-    extensionsMenu.appendChild(menuItem);
-    console.log('[小手机] 菜单入口已注册');
 }
 
 export async function init() {
     try {
-        console.log('[小手机] 开始初始化...');
+        const html = await renderExtensionTemplateAsync('third-party/qwq', 'phone');
+        phoneOverlay = $(html);
+        $('body').append(phoneOverlay);
 
-        createPhoneUI();
-
-        if (typeof eventSource !== 'undefined' && typeof event_types !== 'undefined') {
-            eventSource.on(event_types.APP_READY, () => {
-                console.log('[小手机] APP_READY 事件触发，注册菜单');
-                registerMenuEntry();
-            });
-        }
-
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(() => {
-                console.log('[小手机] 页面已就绪，直接注册菜单');
-                registerMenuEntry();
-            }, 500);
-        } else {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => {
-                    console.log('[小手机] DOMContentLoaded 触发，注册菜单');
-                    registerMenuEntry();
-                }, 500);
-            });
-        }
+        createPhoneButton();
+        setupEventListeners();
 
         phoneInitialized = true;
-        console.log('[小手机] 初始化完成');
+        console.log('[Phone Plugin] Initialized successfully');
     } catch (error) {
-        console.error('[小手机] 初始化失败:', error);
+        console.error('[Phone Plugin] Initialization failed:', error);
     }
 }
