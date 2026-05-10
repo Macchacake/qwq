@@ -1,5 +1,5 @@
 import { renderExtensionTemplateAsync } from '/scripts/extensions.js';
-import { eventSource, event_types } from '/scripts/script.js';
+import { eventSource, event_types } from '../../../script.js';
 
 let phoneOverlay = null;
 let currentApp = null;
