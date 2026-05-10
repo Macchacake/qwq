@@ -4,7 +4,7 @@ import { eventSource, event_types } from '../../../events.js';
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
-let phoneInitialized = false;
+let menuRegistered = false;
 
 function updateTime() {
     const now = new Date();
@@ -17,23 +17,21 @@ function updateTime() {
 }
 
 function openPhone() {
-    if (phoneOverlay) {
-        phoneOverlay.addClass('active');
-        updateTime();
-        if (!clockInterval) {
-            clockInterval = setInterval(updateTime, 1000);
-        }
+    if (!phoneOverlay) return;
+    phoneOverlay.addClass('active');
+    updateTime();
+    if (!clockInterval) {
+        clockInterval = setInterval(updateTime, 1000);
     }
 }
 
 function closePhone() {
-    if (phoneOverlay) {
-        phoneOverlay.removeClass('active');
-        goHome();
-        if (clockInterval) {
-            clearInterval(clockInterval);
-            clockInterval = null;
-        }
+    if (!phoneOverlay) return;
+    phoneOverlay.removeClass('active');
+    goHome();
+    if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
     }
 }
 
@@ -137,7 +135,7 @@ function getAppConfig(appName) {
                 html += '<div class="calendar-grid">';
 
                 weekdays.forEach(day => {
-                    html += `<div class="calendar-header-row">${day}</div>`;
+                    html += `<div class="calendar-header">${day}</div>`;
                 });
 
                 for (let i = firstDay - 1; i >= 0; i--) {
@@ -169,9 +167,6 @@ function getAppConfig(appName) {
                         <div style="aspect-ratio:1;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:4px;"></div>
                         <div style="aspect-ratio:1;background:linear-gradient(135deg,#fa709a,#fee140);border-radius:4px;"></div>
                         <div style="aspect-ratio:1;background:linear-gradient(135deg,#a8edea,#fed6e3);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#ffecd2,#fcb69f);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#ff9a9e,#fecfef);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#a18cd1,#fbc2eb);border-radius:4px;"></div>
                     </div>
                 </div>
             `
@@ -190,11 +185,6 @@ function getAppConfig(appName) {
                             <div class="note-title">工作计划</div>
                             <div class="note-preview">1. 完成项目报告 2. 开会讨论...</div>
                             <div class="note-date">昨天 下午3:15</div>
-                        </div>
-                        <div class="note-item">
-                            <div class="note-title">读书笔记</div>
-                            <div class="note-preview">《活着》- 余华，人生就像一场旅程...</div>
-                            <div class="note-date">3天前</div>
                         </div>
                     </div>
                 </div>
@@ -217,10 +207,6 @@ function getAppConfig(appName) {
                                 <div class="weather-detail-label">风速</div>
                                 <div class="weather-detail-value">12km/h</div>
                             </div>
-                            <div class="weather-detail">
-                                <div class="weather-detail-label">紫外线</div>
-                                <div class="weather-detail-value">中等</div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -236,12 +222,8 @@ function getAppConfig(appName) {
                             <div class="music-title">晴天</div>
                             <div class="music-artist">周杰伦</div>
                         </div>
-                        <div style="background:#e5e5ea;height:4px;border-radius:2px;margin-bottom:24px;">
+                        <div style="background:#e5e5ea;height:4px;border-radius:2px;margin:16px 0;">
                             <div style="background:#007aff;height:100%;width:35%;border-radius:2px;"></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;font-size:12px;color:#8e8e93;margin-bottom:24px;">
-                            <span>1:23</span>
-                            <span>4:29</span>
                         </div>
                         <div class="music-controls">
                             <button class="music-btn">⏮</button>
@@ -278,27 +260,6 @@ function getAppConfig(appName) {
                             </div>
                             <span class="settings-arrow">›</span>
                         </div>
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#ff9500;">🔊</div>
-                                <span>声音</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#5856d6;">🌙</div>
-                                <span>显示与亮度</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#ff3b30;">🔋</div>
-                                <span>电池</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
                     </div>
                 </div>
             `
@@ -324,14 +285,14 @@ function getAppConfig(appName) {
                 const updateClock = () => {
                     if (currentApp !== 'clock') return;
                     const now = new Date();
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const seconds = String(now.getSeconds()).padStart(2, '0');
-                    const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+                    const h = String(now.getHours()).padStart(2, '0');
+                    const m = String(now.getMinutes()).padStart(2, '0');
+                    const s = String(now.getSeconds()).padStart(2, '0');
+                    const d = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
                     const timeEl = document.querySelector('.clock-time');
                     const dateEl = document.querySelector('.clock-date');
-                    if (timeEl) timeEl.textContent = `${hours}:${minutes}:${seconds}`;
-                    if (dateEl) dateEl.textContent = dateStr;
+                    if (timeEl) timeEl.textContent = `${h}:${m}:${s}`;
+                    if (dateEl) dateEl.textContent = d;
                 };
                 setInterval(updateClock, 1000);
             }
@@ -367,69 +328,51 @@ function getAppConfig(appName) {
                 </div>
             `,
             onInit: () => {
-                let calcDisplay = '0';
-                let calcPrevious = null;
-                let calcOperation = null;
-                let calcReset = false;
+                let display = '0';
+                let previous = null;
+                let operation = null;
+                let shouldReset = false;
 
                 const resultEl = document.getElementById('calc-result');
-                const buttons = document.querySelectorAll('.calc-btn');
+                if (!resultEl) return;
 
-                buttons.forEach(btn => {
+                document.querySelectorAll('.calc-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const value = btn.dataset.value;
                         const action = btn.dataset.action;
 
                         if (value !== undefined) {
-                            if (calcReset) {
-                                calcDisplay = '';
-                                calcReset = false;
-                            }
-                            if (value === '.' && calcDisplay.includes('.')) return;
-                            if (calcDisplay === '0' && value !== '.') {
-                                calcDisplay = value;
-                            } else {
-                                calcDisplay += value;
-                            }
+                            if (shouldReset) { display = ''; shouldReset = false; }
+                            if (value === '.' && display.includes('.')) return;
+                            display = (display === '0' && value !== '.') ? value : display + value;
                         } else if (action) {
                             switch (action) {
                                 case 'clear':
-                                    calcDisplay = '0';
-                                    calcPrevious = null;
-                                    calcOperation = null;
-                                    calcReset = false;
+                                    display = '0'; previous = null; operation = null; shouldReset = false;
                                     break;
                                 case 'negate':
-                                    calcDisplay = String(-parseFloat(calcDisplay));
+                                    display = String(-parseFloat(display));
                                     break;
                                 case 'percent':
-                                    calcDisplay = String(parseFloat(calcDisplay) / 100);
+                                    display = String(parseFloat(display) / 100);
                                     break;
-                                case 'add':
-                                case 'subtract':
-                                case 'multiply':
-                                case 'divide':
-                                    if (calcPrevious !== null && calcOperation && !calcReset) {
-                                        calcDisplay = String(calculate(calcPrevious, parseFloat(calcDisplay), calcOperation));
+                                case 'add': case 'subtract': case 'multiply': case 'divide':
+                                    if (previous !== null && operation && !shouldReset) {
+                                        display = String(calculate(previous, parseFloat(display), operation));
                                     }
-                                    calcPrevious = parseFloat(calcDisplay);
-                                    calcOperation = action;
-                                    calcReset = true;
+                                    previous = parseFloat(display);
+                                    operation = action;
+                                    shouldReset = true;
                                     break;
                                 case 'equals':
-                                    if (calcPrevious !== null && calcOperation) {
-                                        calcDisplay = String(calculate(calcPrevious, parseFloat(calcDisplay), calcOperation));
-                                        calcPrevious = null;
-                                        calcOperation = null;
-                                        calcReset = true;
+                                    if (previous !== null && operation) {
+                                        display = String(calculate(previous, parseFloat(display), operation));
+                                        previous = null; operation = null; shouldReset = true;
                                     }
                                     break;
                             }
                         }
-
-                        if (resultEl) {
-                            resultEl.textContent = calcDisplay;
-                        }
+                        resultEl.textContent = display;
                     });
                 });
             }
@@ -441,13 +384,12 @@ function getAppConfig(appName) {
                     <div class="browser-nav">
                         <div class="browser-url-bar">
                             <span class="browser-url-icon">🔍</span>
-                            <input type="text" class="browser-url-input" placeholder="搜索或输入网址" value="www.google.com">
+                            <input type="text" class="browser-url-input" placeholder="搜索或输入网址">
                         </div>
                     </div>
                     <div class="browser-body">
                         <div class="browser-home-icon">🌐</div>
                         <div class="browser-title">欢迎使用浏览器</div>
-                        <div class="browser-subtitle">输入网址开始浏览</div>
                     </div>
                 </div>
             `
@@ -456,15 +398,9 @@ function getAppConfig(appName) {
             title: '相机',
             content: `
                 <div class="camera-content">
-                    <div class="camera-viewfinder">
-                        <div class="camera-overlay">
-                            <span class="camera-mode">拍照</span>
-                            <span class="camera-flash">⚡</span>
-                        </div>
-                        📷
-                    </div>
+                    <div class="camera-viewfinder">📷</div>
                     <div class="camera-controls">
-                        <div class="camera-gallery">�</div>
+                        <div class="camera-gallery">🖼</div>
                         <div class="camera-shutter"></div>
                         <div class="camera-flash">⚡</div>
                     </div>
@@ -478,17 +414,10 @@ function getAppConfig(appName) {
                     <div class="maps-search-bar">
                         <div class="maps-search">
                             <span class="maps-search-icon">🔍</span>
-                            <input type="text" class="maps-search-input" placeholder="搜索地点" value="北京市">
+                            <input type="text" class="maps-search-input" placeholder="搜索地点">
                         </div>
                     </div>
-                    <div class="maps-map">
-                        <div class="maps-compass">🧭</div>
-                        <div class="maps-location">
-                            <span class="maps-location-icon">📍</span>
-                            <span class="maps-location-text">北京市朝阳区</span>
-                        </div>
-                        �️
-                    </div>
+                    <div class="maps-map">🗺️</div>
                 </div>
             `
         },
@@ -511,13 +440,6 @@ function getAppConfig(appName) {
                                 <div class="message-preview">记得吃饭哦</div>
                             </div>
                         </div>
-                        <div class="message-item">
-                            <div class="message-avatar">🏢</div>
-                            <div class="message-info">
-                                <div class="message-name">10086</div>
-                                <div class="message-preview">您的话费余额不足...</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `
@@ -527,71 +449,62 @@ function getAppConfig(appName) {
     return configs[appName] || { title: appName, content: '<div>应用未找到</div>' };
 }
 
-function createPhoneButton() {
+function registerMenu() {
+    if (menuRegistered) return;
+    
     eventSource.on(event_types.APP_READY, () => {
-        try {
-            const extensionsMenu = document.querySelector('#extensionsMenu');
-            if (!extensionsMenu) {
-                console.warn('[qwq Plugin] #extensionsMenu not found');
-                return;
-            }
-
-            const menuItem = document.createElement('div');
-            menuItem.className = 'list-group-item flex-container flexGap5';
-            menuItem.id = 'qwq-toggle';
-            menuItem.style.display = 'block';
-            menuItem.innerHTML = `
-                <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
-                <span>qwq</span>
-            `;
-
-            menuItem.addEventListener('click', () => {
-                if (phoneOverlay && phoneOverlay.hasClass('active')) {
-                    closePhone();
-                } else {
-                    openPhone();
-                }
-            });
-
-            extensionsMenu.appendChild(menuItem);
-            console.log('[qwq Plugin] Menu entry registered');
-            console.log('[qwq Plugin] Menu item display:', menuItem.style.display);
-            console.log('[qwq Plugin] Menu children count:', extensionsMenu.children.length);
-        } catch (error) {
-            console.error('[qwq Plugin] Failed to register menu:', error);
+        const menu = document.getElementById('extensionsMenu');
+        if (!menu) return;
+        
+        const existing = document.getElementById('qwq-toggle');
+        if (existing) {
+            menuRegistered = true;
+            return;
         }
+
+        const item = document.createElement('div');
+        item.id = 'qwq-toggle';
+        item.className = 'list-group-item flex-container flexGap5';
+        item.innerHTML = `
+            <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
+            <span>qwq</span>
+        `;
+
+        item.addEventListener('click', () => {
+            if (phoneOverlay && phoneOverlay.hasClass('active')) {
+                closePhone();
+            } else {
+                openPhone();
+            }
+        });
+
+        menu.appendChild(item);
+        menuRegistered = true;
     });
 }
 
-function setupEventListeners() {
+function setupEvents() {
+    if (!phoneOverlay) return;
+
     phoneOverlay.on('click', (e) => {
-        if (e.target === phoneOverlay[0]) {
-            closePhone();
-        }
+        if (e.target === phoneOverlay[0]) closePhone();
     });
 
     const homeBtn = document.getElementById('home-button');
-    if (homeBtn) {
-        homeBtn.addEventListener('click', goHome);
-    }
+    if (homeBtn) homeBtn.addEventListener('click', goHome);
 
     const backBtn = document.getElementById('back-button');
-    if (backBtn) {
-        backBtn.addEventListener('click', goHome);
-    }
+    if (backBtn) backBtn.addEventListener('click', goHome);
 
     document.addEventListener('click', (e) => {
         const appItem = e.target.closest('.app-item, .dock-item');
-        if (appItem) {
-            const appName = appItem.dataset.app;
-            if (appName) {
-                openApp(appName);
-            }
+        if (appItem && appItem.dataset.app) {
+            openApp(appItem.dataset.app);
         }
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && phoneOverlay && phoneOverlay.hasClass('active')) {
+        if (e.key === 'Escape' && phoneOverlay?.hasClass('active')) {
             closePhone();
         }
     });
@@ -603,12 +516,9 @@ export async function init() {
         phoneOverlay = $(html);
         $('body').append(phoneOverlay);
 
-        createPhoneButton();
-        setupEventListeners();
-
-        phoneInitialized = true;
-        console.log('[Phone Plugin] Initialized successfully');
+        registerMenu();
+        setupEvents();
     } catch (error) {
-        console.error('[Phone Plugin] Initialization failed:', error);
+        console.error('[qwq] 初始化失败:', error);
     }
 }
