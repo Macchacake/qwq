@@ -529,31 +529,39 @@ function getAppConfig(appName) {
 }
 
 function createPhoneButton() {
-    const extensionsMenu = document.querySelector('#extensionsMenu');
-    if (!extensionsMenu) {
-        console.warn('[Phone Plugin] #extensionsMenu not found, retrying...');
-        setTimeout(createPhoneButton, 500);
-        return;
-    }
+    eventSource.on(event_types.APP_READY, () => {
+        try {
+            console.log('[Phone Plugin] 注册扩展菜单入口');
 
-    const buttonHtml = `
-        <div id="phone_toggle" class="list-group-item flex-container flexGap5">
-            <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
-            <span>小手机</span>
-        </div>`;
-    extensionsMenu.insertAdjacentHTML('beforeend', buttonHtml);
-
-    const phoneToggle = document.getElementById('phone_toggle');
-    if (phoneToggle) {
-        phoneToggle.addEventListener('click', () => {
-            if (phoneOverlay && phoneOverlay.hasClass('active')) {
-                closePhone();
-            } else {
-                openPhone();
+            const extensionsMenu = document.querySelector('#extensionsMenu');
+            if (!extensionsMenu) {
+                console.warn('[Phone Plugin] 找不到扩展菜单容器');
+                return;
             }
-        });
-        menuEntryCreated = true;
-    }
+
+            const menuItem = document.createElement('div');
+            menuItem.className = 'list-group-item flex-container flexGap5';
+            menuItem.id = 'phone-toggle';
+            menuItem.innerHTML = `
+                <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
+                <span>小手机</span>
+            `;
+
+            menuItem.addEventListener('click', () => {
+                console.log('[Phone Plugin] 用户从扩展菜单打开手机');
+                if (phoneOverlay && phoneOverlay.hasClass('active')) {
+                    closePhone();
+                } else {
+                    openPhone();
+                }
+            });
+
+            extensionsMenu.appendChild(menuItem);
+            console.log('[Phone Plugin] 扩展菜单入口已注册');
+        } catch (error) {
+            console.error('[Phone Plugin] 注册扩展菜单失败:', error);
+        }
+    });
 }
 
 function setupEventListeners() {
@@ -598,19 +606,7 @@ export async function init() {
 
         setupEventListeners();
 
-        eventSource.on(event_types.APP_READY, () => {
-            if (!menuEntryCreated) {
-                createPhoneButton();
-            }
-        });
-
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(() => {
-                if (!menuEntryCreated) {
-                    createPhoneButton();
-                }
-            }, 1000);
-        }
+        createPhoneButton();
 
         phoneInitialized = true;
         console.log('[Phone Plugin] Initialized successfully');
