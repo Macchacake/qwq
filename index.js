@@ -1,21 +1,10 @@
 import { renderExtensionTemplateAsync } from '/scripts/extensions.js';
+import { eventSource, event_types } from '../../../events.js';
 
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
 let phoneInitialized = false;
-
-function getEventSource() {
-    if (typeof eventSource !== 'undefined') return eventSource;
-    if (typeof window !== 'undefined' && window.eventSource) return window.eventSource;
-    return null;
-}
-
-function getEventTypes() {
-    if (typeof event_types !== 'undefined') return event_types;
-    if (typeof window !== 'undefined' && window.event_types) return window.event_types;
-    return null;
-}
 
 function updateTime() {
     const now = new Date();
@@ -539,16 +528,7 @@ function getAppConfig(appName) {
 }
 
 function createPhoneButton() {
-    const es = getEventSource();
-    const et = getEventTypes();
-    
-    if (!es || !et) {
-        console.warn('[qwq Plugin] eventSource not available, retrying...');
-        setTimeout(createPhoneButton, 500);
-        return;
-    }
-    
-    es.on(et.APP_READY, () => {
+    eventSource.on(event_types.APP_READY, () => {
         try {
             const extensionsMenu = document.querySelector('#extensionsMenu');
             if (!extensionsMenu) {
