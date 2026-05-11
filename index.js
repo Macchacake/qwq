@@ -18,7 +18,7 @@ function updateTime() {
 
 function openPhone() {
     if (!phoneOverlay) return;
-    phoneOverlay.addClass('active');
+    phoneOverlay.classList.add('active');
     updateTime();
     if (!clockInterval) {
         clockInterval = setInterval(updateTime, 1000);
@@ -27,7 +27,7 @@ function openPhone() {
 
 function closePhone() {
     if (!phoneOverlay) return;
-    phoneOverlay.removeClass('active');
+    phoneOverlay.classList.remove('active');
     goHome();
     if (clockInterval) {
         clearInterval(clockInterval);
@@ -449,45 +449,94 @@ function getAppConfig(appName) {
     return configs[appName] || { title: appName, content: '<div>应用未找到</div>' };
 }
 
-function registerMenu() {
+function createMenuItem() {
+    const existing = document.getElementById('qwq-toggle');
+    if (existing) {
+        existing.remove();
+    }
+
+    const item = document.createElement('div');
+    item.id = 'qwq-toggle';
+    item.className = 'list-group-item flex-container flexGap5';
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.innerHTML = `
+        <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
+        <span>qwq</span>
+    `;
+
+    item.addEventListener('click', () => {
+        if (phoneOverlay?.classList.contains('active')) {
+            closePhone();
+        } else {
+            openPhone();
+        }
+    });
+
+    return item;
+}
+
+function tryRegisterMenu() {
     if (menuRegistered) return;
-    
-    eventSource.on(event_types.APP_READY, () => {
-        const menu = document.getElementById('extensionsMenu');
-        if (!menu) return;
-        
-        const existing = document.getElementById('qwq-toggle');
-        if (existing) {
+
+    const menus = [
+        document.getElementById('extensionsMenu'),
+        document.querySelector('.extensionsMenu'),
+        document.querySelector('[id*="extensions"]'),
+        document.querySelector('[class*="extensions"]')
+    ];
+
+    for (const menu of menus) {
+        if (menu) {
+            const item = createMenuItem();
+            menu.appendChild(item);
             menuRegistered = true;
+            console.log('[qwq] 菜单注册成功');
             return;
         }
+    }
+}
 
-        const item = document.createElement('div');
-        item.id = 'qwq-toggle';
-        item.className = 'list-group-item flex-container flexGap5';
-        item.innerHTML = `
-            <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
-            <span>qwq</span>
-        `;
+function registerMenu() {
+    tryRegisterMenu();
 
-        item.addEventListener('click', () => {
-            if (phoneOverlay && phoneOverlay.hasClass('active')) {
-                closePhone();
-            } else {
-                openPhone();
+    if (!menuRegistered) {
+        eventSource.on(event_types.APP_READY, () => {
+            setTimeout(tryRegisterMenu, 100);
+        });
+    }
+
+    if (!menuRegistered) {
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.addedNodes.length) {
+                    tryRegisterMenu();
+                    if (menuRegistered) {
+                        observer.disconnect();
+                    }
+                }
             }
         });
 
-        menu.appendChild(item);
-        menuRegistered = true;
-    });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        setTimeout(() => {
+            if (!menuRegistered) {
+                observer.disconnect();
+                console.warn('[qwq] 菜单注册超时');
+            }
+        }, 10000);
+    }
 }
 
 function setupEvents() {
     if (!phoneOverlay) return;
 
-    phoneOverlay.on('click', (e) => {
-        if (e.target === phoneOverlay[0]) closePhone();
+    phoneOverlay.addEventListener('click', (e) => {
+        if (e.target === phoneOverlay) closePhone();
     });
 
     const homeBtn = document.getElementById('home-button');
@@ -504,7 +553,7 @@ function setupEvents() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && phoneOverlay?.hasClass('active')) {
+        if (e.key === 'Escape' && phoneOverlay?.classList.contains('active')) {
             closePhone();
         }
     });
@@ -513,11 +562,15 @@ function setupEvents() {
 export async function init() {
     try {
         const html = await renderExtensionTemplateAsync('third-party/qwq', 'phone');
-        phoneOverlay = $(html);
-        $('body').append(phoneOverlay);
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = html;
+        phoneOverlay = tempContainer.firstChild;
+        document.body.appendChild(phoneOverlay);
 
         registerMenu();
         setupEvents();
+        
+        console.log('[qwq] 插件初始化完成');
     } catch (error) {
         console.error('[qwq] 初始化失败:', error);
     }
