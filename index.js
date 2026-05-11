@@ -4,7 +4,6 @@ import { eventSource, event_types } from '../../../events.js';
 let phoneOverlay = null;
 let currentApp = null;
 let clockInterval = null;
-let menuRegistered = false;
 
 function updateTime() {
     const now = new Date();
@@ -39,13 +38,7 @@ function goHome() {
     const home = document.getElementById('phone-home');
     const appContent = document.getElementById('phone-app-content');
     if (home) home.style.display = 'block';
-    if (appContent) {
-        appContent.classList.remove('active', 'slide-in');
-        appContent.classList.add('slide-out');
-        setTimeout(() => {
-            appContent.classList.remove('slide-out');
-        }, 300);
-    }
+    if (appContent) appContent.classList.remove('active');
     currentApp = null;
 }
 
@@ -58,7 +51,7 @@ function openApp(appName) {
     if (!home || !appContent || !appTitle || !appBody) return;
 
     home.style.display = 'none';
-    appContent.classList.add('active', 'slide-in');
+    appContent.classList.add('active');
     currentApp = appName;
 
     const appConfig = getAppConfig(appName);
@@ -95,7 +88,7 @@ function getAppConfig(appName) {
                             </div>
                         </div>
                         <div class="chat-item">
-                            <div class="chat-avatar group">👥</div>
+                            <div class="chat-avatar">👥</div>
                             <div class="chat-info">
                                 <div class="chat-name">工作群</div>
                                 <div class="chat-preview">明天开会，请大家准时参加</div>
@@ -109,9 +102,9 @@ function getAppConfig(appName) {
                             </div>
                         </div>
                         <div class="chat-item">
-                            <div class="chat-avatar official">🤖</div>
+                            <div class="chat-avatar">🤖</div>
                             <div class="chat-info">
-                                <div class="chat-name">订阅号消息</div>
+                                <div class="chat-name">订阅号</div>
                                 <div class="chat-preview">今日热点新闻...</div>
                             </div>
                         </div>
@@ -131,7 +124,7 @@ function getAppConfig(appName) {
                 const daysInPrevMonth = new Date(year, month, 0).getDate();
 
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-                let html = `<div style="text-align:center;font-size:18px;font-weight:600;margin-bottom:16px;">${year}年${month + 1}月</div>`;
+                let html = `<div style="text-align:center;font-size:18px;font-weight:600;margin:16px 0;">${year}年${month + 1}月</div>`;
                 html += '<div class="calendar-grid">';
 
                 weekdays.forEach(day => {
@@ -160,13 +153,13 @@ function getAppConfig(appName) {
             title: '相册',
             content: `
                 <div class="photos-content">
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#f093fb,#f5576c);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#fa709a,#fee140);border-radius:4px;"></div>
-                        <div style="aspect-ratio:1;background:linear-gradient(135deg,#a8edea,#fed6e3);border-radius:4px;"></div>
+                    <div class="photos-grid">
+                        <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:4px;">🌅</div>
+                        <div style="background:linear-gradient(135deg,#f093fb,#f5576c);border-radius:4px;">🌄</div>
+                        <div style="background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:4px;">🌊</div>
+                        <div style="background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:4px;">🌳</div>
+                        <div style="background:linear-gradient(135deg,#fa709a,#fee140);border-radius:4px;">🌸</div>
+                        <div style="background:linear-gradient(135deg,#a8edea,#fed6e3);border-radius:4px;">🌺</div>
                     </div>
                 </div>
             `
@@ -175,17 +168,13 @@ function getAppConfig(appName) {
             title: '备忘录',
             content: `
                 <div class="notes-content">
-                    <div class="notes-list">
-                        <div class="note-item">
-                            <div class="note-title">购物清单</div>
-                            <div class="note-preview">牛奶、面包、鸡蛋、水果...</div>
-                            <div class="note-date">今天 上午9:30</div>
-                        </div>
-                        <div class="note-item">
-                            <div class="note-title">工作计划</div>
-                            <div class="note-preview">1. 完成项目报告 2. 开会讨论...</div>
-                            <div class="note-date">昨天 下午3:15</div>
-                        </div>
+                    <div class="note-item">
+                        <div class="note-title">购物清单</div>
+                        <div class="note-preview">牛奶、面包、鸡蛋、水果...</div>
+                    </div>
+                    <div class="note-item">
+                        <div class="note-title">工作计划</div>
+                        <div class="note-preview">1. 完成项目报告 2. 开会讨论...</div>
                     </div>
                 </div>
             `
@@ -198,16 +187,6 @@ function getAppConfig(appName) {
                         <div style="font-size:64px;margin-bottom:16px;">☀️</div>
                         <div class="weather-temp">26°</div>
                         <div class="weather-condition">晴天</div>
-                        <div class="weather-details">
-                            <div class="weather-detail">
-                                <div class="weather-detail-label">湿度</div>
-                                <div class="weather-detail-value">45%</div>
-                            </div>
-                            <div class="weather-detail">
-                                <div class="weather-detail-label">风速</div>
-                                <div class="weather-detail-value">12km/h</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `
@@ -216,20 +195,10 @@ function getAppConfig(appName) {
             title: '音乐',
             content: `
                 <div class="music-content">
-                    <div class="music-player">
-                        <div class="music-cover">🎵</div>
-                        <div class="music-info">
-                            <div class="music-title">晴天</div>
-                            <div class="music-artist">周杰伦</div>
-                        </div>
-                        <div style="background:#e5e5ea;height:4px;border-radius:2px;margin:16px 0;">
-                            <div style="background:#007aff;height:100%;width:35%;border-radius:2px;"></div>
-                        </div>
-                        <div class="music-controls">
-                            <button class="music-btn">⏮</button>
-                            <button class="music-btn play">▶</button>
-                            <button class="music-btn">⏭</button>
-                        </div>
+                    <div class="music-cover">🎵</div>
+                    <div class="music-info">
+                        <div class="music-title">晴天</div>
+                        <div class="music-artist">周杰伦</div>
                     </div>
                 </div>
             `
@@ -238,64 +207,23 @@ function getAppConfig(appName) {
             title: '设置',
             content: `
                 <div class="settings-content">
-                    <div class="settings-list">
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#007aff;">📶</div>
-                                <span>Wi-Fi</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#007aff;">📱</div>
-                                <span>蓝牙</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-left">
-                                <div class="settings-icon-small" style="background:#34c759;">🔔</div>
-                                <span>通知</span>
-                            </div>
-                            <span class="settings-arrow">›</span>
-                        </div>
+                    <div class="settings-item">
+                        <div class="settings-icon-small" style="background:#007aff;">📶</div>
+                        <span>Wi-Fi</span>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon-small" style="background:#007aff;">📱</div>
+                        <span>蓝牙</span>
+                        <span class="settings-arrow">›</span>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon-small" style="background:#34c759;">🔔</div>
+                        <span>通知</span>
+                        <span class="settings-arrow">›</span>
                     </div>
                 </div>
             `
-        },
-        clock: {
-            title: '时钟',
-            content: (() => {
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-                return `
-                    <div class="clock-content">
-                        <div class="clock-display">
-                            <div class="clock-time">${hours}:${minutes}:${seconds}</div>
-                            <div class="clock-date">${dateStr}</div>
-                        </div>
-                    </div>
-                `;
-            })(),
-            onInit: () => {
-                const updateClock = () => {
-                    if (currentApp !== 'clock') return;
-                    const now = new Date();
-                    const h = String(now.getHours()).padStart(2, '0');
-                    const m = String(now.getMinutes()).padStart(2, '0');
-                    const s = String(now.getSeconds()).padStart(2, '0');
-                    const d = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-                    const timeEl = document.querySelector('.clock-time');
-                    const dateEl = document.querySelector('.clock-date');
-                    if (timeEl) timeEl.textContent = `${h}:${m}:${s}`;
-                    if (dateEl) dateEl.textContent = d;
-                };
-                setInterval(updateClock, 1000);
-            }
         },
         calculator: {
             title: '计算器',
@@ -376,160 +304,51 @@ function getAppConfig(appName) {
                     });
                 });
             }
-        },
-        browser: {
-            title: '浏览器',
-            content: `
-                <div class="browser-content">
-                    <div class="browser-nav">
-                        <div class="browser-url-bar">
-                            <span class="browser-url-icon">🔍</span>
-                            <input type="text" class="browser-url-input" placeholder="搜索或输入网址">
-                        </div>
-                    </div>
-                    <div class="browser-body">
-                        <div class="browser-home-icon">🌐</div>
-                        <div class="browser-title">欢迎使用浏览器</div>
-                    </div>
-                </div>
-            `
-        },
-        camera: {
-            title: '相机',
-            content: `
-                <div class="camera-content">
-                    <div class="camera-viewfinder">📷</div>
-                    <div class="camera-controls">
-                        <div class="camera-gallery">🖼</div>
-                        <div class="camera-shutter"></div>
-                        <div class="camera-flash">⚡</div>
-                    </div>
-                </div>
-            `
-        },
-        maps: {
-            title: '地图',
-            content: `
-                <div class="maps-content">
-                    <div class="maps-search-bar">
-                        <div class="maps-search">
-                            <span class="maps-search-icon">🔍</span>
-                            <input type="text" class="maps-search-input" placeholder="搜索地点">
-                        </div>
-                    </div>
-                    <div class="maps-map">🗺️</div>
-                </div>
-            `
-        },
-        messages: {
-            title: '信息',
-            content: `
-                <div class="messages-content">
-                    <div class="messages-list">
-                        <div class="message-item">
-                            <div class="message-avatar">👤</div>
-                            <div class="message-info">
-                                <div class="message-name">小明</div>
-                                <div class="message-preview">好的，明天见！</div>
-                            </div>
-                        </div>
-                        <div class="message-item">
-                            <div class="message-avatar">👩</div>
-                            <div class="message-info">
-                                <div class="message-name">妈妈</div>
-                                <div class="message-preview">记得吃饭哦</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `
         }
     };
 
     return configs[appName] || { title: appName, content: '<div>应用未找到</div>' };
 }
 
-function createMenuItem() {
-    const existing = document.getElementById('qwq-toggle');
-    if (existing) {
-        existing.remove();
-    }
+function registerMenu() {
+    const addMenuItem = () => {
+        const menu = document.getElementById('extensionsMenu');
+        if (!menu) return;
 
-    const item = document.createElement('div');
-    item.id = 'qwq-toggle';
-    item.className = 'list-group-item flex-container flexGap5';
-    item.style.display = 'flex';
-    item.style.alignItems = 'center';
-    item.innerHTML = `
-        <div class="fa-solid fa-gamepad extensionsMenuExtensionButton"></div>
-        <span>qwq</span>
-    `;
+        if (document.getElementById('phone-toggle')) return;
 
-    item.addEventListener('click', () => {
-        if (phoneOverlay?.classList.contains('active')) {
-            closePhone();
-        } else {
-            openPhone();
-        }
+        const item = document.createElement('div');
+        item.id = 'phone-toggle';
+        item.className = 'list-group-item flex-container flexGap5';
+        item.innerHTML = `
+            <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
+            <span>小手机</span>
+        `;
+
+        item.addEventListener('click', () => {
+            if (phoneOverlay?.classList.contains('active')) {
+                closePhone();
+            } else {
+                openPhone();
+            }
+        });
+
+        menu.appendChild(item);
+    };
+
+    addMenuItem();
+
+    eventSource.on(event_types.APP_READY, () => {
+        setTimeout(addMenuItem, 100);
     });
 
-    return item;
-}
+    const observer = new MutationObserver(() => {
+        addMenuItem();
+    });
 
-function tryRegisterMenu() {
-    if (menuRegistered) return;
+    observer.observe(document.body, { childList: true, subtree: true });
 
-    const menus = [
-        document.getElementById('extensionsMenu'),
-        document.querySelector('.extensionsMenu'),
-        document.querySelector('[id*="extensions"]'),
-        document.querySelector('[class*="extensions"]')
-    ];
-
-    for (const menu of menus) {
-        if (menu) {
-            const item = createMenuItem();
-            menu.appendChild(item);
-            menuRegistered = true;
-            console.log('[qwq] 菜单注册成功');
-            return;
-        }
-    }
-}
-
-function registerMenu() {
-    tryRegisterMenu();
-
-    if (!menuRegistered) {
-        eventSource.on(event_types.APP_READY, () => {
-            setTimeout(tryRegisterMenu, 100);
-        });
-    }
-
-    if (!menuRegistered) {
-        const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.addedNodes.length) {
-                    tryRegisterMenu();
-                    if (menuRegistered) {
-                        observer.disconnect();
-                    }
-                }
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        setTimeout(() => {
-            if (!menuRegistered) {
-                observer.disconnect();
-                console.warn('[qwq] 菜单注册超时');
-            }
-        }, 10000);
-    }
+    setTimeout(() => observer.disconnect(), 10000);
 }
 
 function setupEvents() {
@@ -569,9 +388,7 @@ export async function init() {
 
         registerMenu();
         setupEvents();
-        
-        console.log('[qwq] 插件初始化完成');
     } catch (error) {
-        console.error('[qwq] 初始化失败:', error);
+        console.error('[小手机插件] 初始化失败:', error);
     }
 }

@@ -6,11 +6,10 @@
     "js": "index.js",
     "css": "style.css",
     "author": "qwq",
-    "version": "1.1.0",
+    "version": "1.0.0",
     "homePage": "",
     "auto_update": false,
     "hooks": {
         "activate": "init"
-    },
-    "mobile": true
+    }
 }
