@@ -312,8 +312,8 @@ function getAppConfig(appName) {
 
 function registerMenu() {
     const addMenuItem = () => {
-        const menu = document.getElementById('extensionsMenu');
-        if (!menu) return;
+        const container = document.getElementById('phone_wand_container');
+        if (!container) return;
 
         if (document.getElementById('phone-toggle')) return;
 
@@ -333,7 +333,8 @@ function registerMenu() {
             }
         });
 
-        menu.appendChild(item);
+        container.appendChild(item);
+        console.log('[小手机插件] 菜单注册成功');
     };
 
     addMenuItem();
@@ -348,7 +349,42 @@ function registerMenu() {
 
     observer.observe(document.body, { childList: true, subtree: true });
 
-    setTimeout(() => observer.disconnect(), 10000);
+    setTimeout(() => {
+        observer.disconnect();
+        if (!document.getElementById('phone-toggle')) {
+            console.warn('[小手机插件] 菜单注册超时，尝试直接创建容器');
+            createContainerAndAddMenu();
+        }
+    }, 10000);
+}
+
+function createContainerAndAddMenu() {
+    const menu = document.getElementById('extensionsMenu');
+    if (!menu) return;
+
+    const container = document.createElement('div');
+    container.id = 'phone_wand_container';
+    container.className = 'extension_container';
+    menu.appendChild(container);
+
+    const item = document.createElement('div');
+    item.id = 'phone-toggle';
+    item.className = 'list-group-item flex-container flexGap5';
+    item.innerHTML = `
+        <div class="fa-solid fa-mobile-screen-button extensionsMenuExtensionButton"></div>
+        <span>小手机</span>
+    `;
+
+    item.addEventListener('click', () => {
+        if (phoneOverlay?.classList.contains('active')) {
+            closePhone();
+        } else {
+            openPhone();
+        }
+    });
+
+    container.appendChild(item);
+    console.log('[小手机插件] 通过创建容器注册菜单成功');
 }
 
 function setupEvents() {
