@@ -1,5 +1,5 @@
 {
-    "display_name": "qwq",
+    "display_name": "小手机",
     "loading_order": 100,
     "requires": [],
     "optional": [],
@@ -8,8 +8,5 @@
     "author": "qwq",
     "version": "1.0.0",
     "homePage": "",
-    "auto_update": false,
-    "hooks": {
-        "activate": "init"
-    }
+    "auto_update": false
 }
