@@ -1,4 +1,4 @@
-import { eventSource, event_types } from '../../../script.js';
+import { eventSource, event_types } from '/script.js';
 
 let phoneOverlay = null;
 let clockTimer = null;

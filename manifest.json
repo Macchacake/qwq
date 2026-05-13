@@ -8,5 +8,8 @@
     "author": "qwq",
     "version": "1.0.0",
     "homePage": "",
-    "auto_update": false
+    "auto_update": false,
+    "hooks": {
+        "activate": "init"
+    }
 }
